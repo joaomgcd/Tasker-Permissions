@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tasker Permissions</title>    
+	<meta charset="utf-8"/>
+	<meta name="description" content="Tasker Permissions">
+	<meta name="viewport" content="width=device-width, height=device-height,initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<script>
+         const isType = (value, name) => {
+            if (value === null || value === undefined || !name) return false;
+
+            return value.constructor.name == name;
+        }
+        const isString = (value) => isType(value, "String");
+        const replaceAll = (string, replaceThis, withThis) => {
+            if (!isString(string)) return string;
+
+            return string.split(replaceThis).join(withThis);
+        }
+		const errorHandler = (e) => {
+            console.error("Caught unexpected error", e);
+            var message = e;
+            if(!isString(e)){
+                message = e.message;
+                if(!message && e.getMessage){
+                    message = e.getMessage();
+                }
+            }
+            message = `Unexpected Error: ${message}. Please contact developer about it.`;
+            if(e.filename){
+                message = `${message} in file ${e.filename}`;
+            }
+            if(e.lineno){
+                message = `${message} at line ${e.lineno}`;
+            }
+            if(e.stack){
+                message = `${message}\n\nTrace:\n${e.stack}`;
+            }
+
+			alert(message);
+		}
+        window.onerror = errorHandler;
+		window.onunhandledrejection = errorPromise=>errorPromise.promise.catch(errorHandler);
+	</script>
+  <script type="module">	
+        import {App} from './app/app.js';
+		    const app = new App();
+        const body = document.querySelector("body");
+        body.innerHTML = "";
+        app.render().then(render=>body.appendChild(render));
+	</script>
+</head>
+<body class="panel">
+	Loading ADB Permissions...
+</body>
+</html>

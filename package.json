@@ -1,0 +1,111 @@
+{
+  "name": "com.joaomgcd.taskerpermissions",
+  "version": "0.0.1",
+  "description": "Easily grant permissions for Tasker using a simple UI",
+  "main": "main_esm.js",
+  "scripts": {
+    "postinstall": "install-app-deps",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "makemac": "electron-installer-dmg",
+    "pack": "electron-builder build --dir",
+    "dist": "electron-builder build"
+  },
+  "author": "João Dias",
+  "license": "ISC",
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.52",
+    "@electron-forge/maker-deb": "^6.0.0-beta.52",
+    "@electron-forge/maker-dmg": "^6.0.0-beta.52",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.52",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.52",
+    "@electron-forge/maker-zip": "^6.0.0-beta.52",
+    "electron": "^13.1.7",
+    "electron-builder": "latest",
+    "electron-builder-squirrel-windows": "^22.7.0",
+    "electron-installer-dmg": "^3.0.0"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.0",
+    "esm": "^3.2.25"
+  },
+  "build": {
+    "appId": "com.joaomgcd.taskerpermissions",
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 240,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "linux": {
+      "icon": "build/icon.png",
+      "target": [
+        "AppImage",
+        "deb"
+      ]
+    },
+    "win": {
+      "target": [
+        "portable",
+        "squirrel"
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "tasker_permissions_portable.exe"
+    },
+    "squirrelWindows": {
+      "loadingGif": "joinloading.png"
+    }
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "out": "dist"
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "com.joaomgcd.join",
+            "iconUrl": "https://raw.githubusercontent.com/markwal/GpxUi/master/gpx.ico",
+            "loadingGif": "joinloading.png",
+            "setupIcon": "join.ico"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ],
+          "icon": "./join.png"
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-dmg",
+          "config": {
+            "background": "./images/account_background.png",
+            "icon": "./join.icns",
+            "format": "ULFO"
+          }
+        }
+      ]
+    }
+  }
+}

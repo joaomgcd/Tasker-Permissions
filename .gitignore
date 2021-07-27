@@ -1,0 +1,32 @@
+node_modules
+
+out/Join Desktop-win32-x64
+out/Join Desktop-darwin-x64
+package-lock.json
+joindashboard.code-workspace
+index.html.bak
+main.js.bak
+bin/
+dist/
+dist/mac
+out/make/squirrel.windows/x64/com.joaomgcd.join-**-full.nupkg
+out/make/squirrel.windows/x64/RELEASES
+out/make/.DS_Store
+out/.DS_Store
+out/make/squirrel.windows/.DS_Store
+out/make/zip/.DS_Store
+out/make/zip/darwin/.DS_Store
+out/make/zip/darwin/x64/.DS_Store
+out/make/zip/darwin/x64/Join Desktop-darwin-x64-**.zip
+dist/.DS_Store
+dist/builder-effective-config.yaml
+dist/Join Desktop-**-mac.zip
+dist/Join Desktop-**.dmg.blockmap
+dist/latest-mac.yml
+dist/mac/.DS_Store
+dist/win-unpacked
+.DS_Store
+dist/squirrel-windows/com.joaomgcd.join-**full.nupkg
+dist/squirrel-windows/RELEASES
+**.nupkg
+*.bak
