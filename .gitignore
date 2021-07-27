@@ -6,7 +6,6 @@ package-lock.json
 joindashboard.code-workspace
 index.html.bak
 main.js.bak
-bin/
 dist/
 dist/mac
 out/make/squirrel.windows/x64/com.joaomgcd.join-**-full.nupkg
