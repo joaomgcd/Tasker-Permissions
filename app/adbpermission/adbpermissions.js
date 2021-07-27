@@ -6,6 +6,9 @@ export class ADBPermissions extends Models {
     constructor(permissionsFromSystem, items = [
         {prettyName: "Write Secure Settings", isShell:true,isPmGrant:true,permission:"android.permission.WRITE_SECURE_SETTINGS",usedFor:"The <b>Custom Setting</b> action and some other specific setting actions."},
         {prettyName: "Read System Logs", isShell:true,isPmGrant:true,permission:"android.permission.READ_LOGS",usedFor:"The <b>Logcat Entry</b> event and on devices with Android 10+ to read the device's clipboard."},
+        {prettyName: "Running Services", isShell:true,isPmGrant:true,permission:"android.permission.DUMP",usedFor:"Checking what services are running on your device."},
+        {prettyName: "Long-click Volume Buttons", isShell:true,isPmGrant:true,permission:"android.permission.SET_VOLUME_KEY_LONG_PRESS_LISTENER",usedFor:"Checking when you long press the volume keys on your device."},
+        {prettyName: "Media Buttons", isShell:true,isPmGrant:true,permission:"android.permission.SET_MEDIA_KEY_LISTENER",usedFor:"Checking when you press media keys on your device."},
         {prettyName: "Capture Screen", isShell:true,isPmGrant:false,permission:"PROJECT_MEDIA",usedFor:"Taking screenshots and recording the screen without having the Android system prompting you to allow it every time."}
     ]) {
         super(items.map(item=>{

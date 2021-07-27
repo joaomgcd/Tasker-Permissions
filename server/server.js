@@ -48,21 +48,25 @@ export class Server{
     async getCurrentAppPath(){
         return require('electron').app.getAppPath().replaceAll("\\","/");
     }
+    async logConsole(log,args){
+        this.sendToPageEventBus(new RequestConsoleLog(log,args));
+    }
     async onRequestRunCommandLineCommand({command,args,prependCurrentPath}){
         if(!command){
-            console.log("Won't run empty command line command");
+            this.logConsole("Won't run empty command line command");
             return;
         }
         if(prependCurrentPath){
-            command = (await this.getCurrentAppPath()) + "/" + command;
+            // command = (await this.getCurrentAppPath()) + "/" + command;
+            command = process.execPath.substring(0,process.execPath.toString().lastIndexOf("\\")) + "/" + command;
         }
-        console.log("Running command line",command,args);
+        this.logConsole("Running command line",command,args);
         try{
             const result = await CommandLine.run(command,args);
-            console.log("Command line result",result);
+            this.logConsole("Command line result",result);
             await this.sendToPageEventBus(new ResponseRunCommandLineCommand(result));
         }catch(error){
-            console.log("Command line error",error);
+            this.logConsole("Command line error",error);
             error = JSON.stringify(error);
             error = JSON.parse(error);
             await this.sendToPageEventBus(new ResponseRunCommandLineCommand(error));
@@ -77,3 +81,9 @@ class ResponseRunCommandLineCommand{
 }
 
 class ResponseTest{}
+class RequestConsoleLog{
+    constructor(log,args){
+        this.log = log;
+        this.args = args;
+    }
+}

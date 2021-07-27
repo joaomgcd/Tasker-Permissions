@@ -21,18 +21,23 @@ export class App extends Control {
         });
         // ServerEventBus.post(new RequestTest());
 
+        await this.renderAll();
+        return result;
+    }
+    async renderAll(){
         await this.renderDevices();
         await this.renderPermissions();  
-        await this.getAppOppsPermissionGranted("PROJECT_MEDIA");      
-        return result;
     }
     async onResponseTest(){
         console.log("Response test");
     }
     async renderDevices(){
+        const devicesRoot = await this.$("#adbDevicesRoot");
+
         const adbDevices = await this.adbDevices;
+
         this.controlADBDevices = new ControlADBDevices(adbDevices);
-        this.renderInto(this.controlADBDevices,await this.$("#adbDevicesRoot"));
+        this.renderInto(this.controlADBDevices,devicesRoot);
     }
     async onSelectedDevice(){
         await this.renderPermissions();
@@ -40,6 +45,12 @@ export class App extends Control {
     async renderPermissions(){
         const elementPermissionsRoot = await this.$("#adbPermissionsRoot");
         elementPermissionsRoot.innerHTML = "Loading permissions...";
+
+        if(!this.selectedDeviceControl){
+            elementPermissionsRoot.innerHTML = "";
+    
+            return;
+        }
         const adbPermissions = await this.adbPermissions;
         console.log("Permissions dump",adbPermissions);
 
@@ -122,6 +133,12 @@ export class App extends Control {
         const response = await ServerEventBus.postAndWaitForResponse(new RequestRunCommandLineCommand({command,args,prependCurrentPath}),ResponseRunCommandLineCommand,10000);
         console.log("Ran command line. Response:",response);
         return response;
+    }
+    async onRequestConsoleLog(log){
+        console.log("Log from server",log);
+    }
+    async onRequestReloadDevices(){
+        await this.renderAll();
     }
 }
 

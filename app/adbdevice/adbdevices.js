@@ -33,16 +33,33 @@ export class ControlADBDevices extends Control {
     }
     get html() {
         return `
-        <div>
-            <h4>Select Your Device Below</h4>
-            <div id="adbDevices">
+        <div class="adbDevicesRoot">        
+            <div id="adbDevicesReload">
+                Reload
             </div>
+            <div id="deviceListWrapper">
+                <h4 id="elementADBDevicesTitle">Select Your Device Below</h4>
+                <div id="adbDevices">
+                </div>
+            </div>    
         </div>`;
     }
     get css() {
         return `
+        #adbDevicesRoot{
+            display: flex;
+            flex-direction: column;
+        }
         #adbDevices{
             display: flex;
+        }
+        #adbDevicesReload{
+            padding:8px;
+            border: 1px solid #808080c7;
+            cursor: pointer;
+            display:flex;
+            justify-content: center;
+            align-items: center;
         }
         .adbDevice{
             display: flex;
@@ -65,16 +82,26 @@ export class ControlADBDevices extends Control {
         `;
     }
     async renderSpecific(root) {
+        this.elementDeviceListWrapper = await this.$("#deviceListWrapper");
         this.elementADBDevices = await this.$("#adbDevices");
+        this.elementADBDevicesReload = await this.$("#adbDevicesReload");
+        this.elementADBDevicesTitle = await this.$("#elementADBDevicesTitle");
 
         this.controls = await this.renderList(this.elementADBDevices, this.adbDevices, ControlADBDevice);
+        this.elementADBDevicesReload.onclick = async () => {
+            EventBus.post(new RequestReloadDevices());
+        }
+        if(!this.adbDevices || this.adbDevices.length == 0){
+            this.elementADBDevicesTitle.innerHTML = "No devices detected";
+        };
+        if(this.adbDevices && this.adbDevices.length == 1){
+            this.elementADBDevicesTitle.innerHTML = "";
+        };
+
         if(this.controls.length == 0) return;
 
         this.controls[0].selected = true;
         
-        if(!this.adbDevices || this.adbDevices.length == 0 || this.adbDevices.length == 1){
-            root.innerHTML = "";
-        };
     }
     async toggleShow() {
         UtilDOM.toggleShow(this.elementADBDevices)
@@ -129,6 +156,7 @@ export class ControlADBDevice extends Control {
         }
     }
 }
+class RequestReloadDevices {}
 class SelectedDevice {}
 
 class UnSelectDevices {
