@@ -12,11 +12,6 @@ export class App extends Control {
         return `
         <div id="app">
             <div id="androidAppsRoot"></div>
-            <div id="taskerAdbWifiRoot">
-                <div>Enable ADB Wifi in Tasker with port</div>
-                <input type="text" value="5555" id="inputAdbWifiPort"></input>
-                <input type="button" value="Confirm" id="buttonEnableAdbWifi"></input>
-            </div>
             <div id="adbDevicesRoot"></div>
             <div id="adbPermissionsRoot"></div>
         </div>`;
@@ -25,10 +20,6 @@ export class App extends Control {
         return `
         html,body{
             margin: 0px;
-        }
-        #taskerAdbWifiRoot{
-            margin: 16px;
-            font-weight: bold;
         }
         .hidden{
             display: none;
@@ -46,23 +37,12 @@ export class App extends Control {
         window.oncontextmenu = () => ServerEventBus.post(new RequestToggleDevOptions());
         await this.renderAll();
         EventBus.register(this);
-        (await this.$("#taskerAdbWifiRoot")).onclick = async () => {
-            const port = document.querySelector("#inputAdbWifiPort").value;
-            const result = await this.runAdbCommand(`tcpip ${port}`);
-            console.log("ADB Wifi result", result);
-            if(result.error){
-                alert(result.error);
-            }else{
-                alert("Success!")
-            }
-        }
         return result;
     }
     async renderAll(){
         await this.renderAndroidApps();
         await this.renderDevices();
         await this.renderPermissions();  
-        await this.toggleAdbWifi();
     }
     async onResponseTest(){
         console.log("Response test");
@@ -77,19 +57,15 @@ export class App extends Control {
 
         const adbDevices = await this.adbDevices;
 
-        this.controlADBDevices = new ControlADBDevices(adbDevices);
+        this.controlADBDevices = new ControlADBDevices(adbDevices, this.selectedAndroidApp);
         await this.renderInto(this.controlADBDevices,devicesRoot);
     }
     async onSelectedDevice(){
         await this.renderPermissions();
     }
     async onSelectedAndroidApp(){
-        await this.toggleAdbWifi();
         await this.renderDevices();
         await this.renderPermissions();
-    }
-    async toggleAdbWifi(){
-        UtilDOM.showOrHide(document.querySelector("#taskerAdbWifiRoot"),this.selectedAndroidApp.packageName == "net.dinglisch.android.taskerm");
     }
     async renderPermissions(){
         const elementPermissionsRoot = await this.$("#adbPermissionsRoot");
@@ -197,6 +173,16 @@ export class App extends Control {
     }
     async onRequestReloadDevices(){
         await this.renderAll();
+    }
+    async onRequestRunAdbCommand({command}){     
+        console.log("onRequestRunAdbCommand", command);
+        const result = await this.runAdbCommand(command);
+        console.log("onRequestRunAdbCommand result", result);
+        if(result.error){
+            alert(result.error);
+        }else{
+            alert("Success!")
+        }
     }
 }
 
