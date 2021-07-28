@@ -79,8 +79,12 @@ export class Server{
             return;
         }
         command = command.replace("bin/",`bin/${this.systemTypeString}/`);
-        if(command.includes("bin/adb.exe") && (this.isMac || this.isLinux)){
+        if(command.includes("adb.exe") && (this.isMac || this.isLinux)){
             command = command.replace(".exe","");
+            const chmod = `chmod 755 ${this.execFolder}/bin/${this.systemTypeString}/adb`;
+            this.logConsole("Running chmod",chmod);
+            const resultChmod = await CommandLine.run(chmod);
+            this.logConsole("chmod result",resultChmod);
         }
         if(prependCurrentPath){
             // command = (await this.getCurrentAppPath()) + "/" + command;
