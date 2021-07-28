@@ -2,6 +2,7 @@
   "name": "com.joaomgcd.taskerpermissions",
   "version": "0.0.1",
   "description": "Easily grant permissions for Tasker using a simple UI",
+  "homepage": "https://github.com/joaomgcd/Tasker-Permissions",
   "main": "main_esm.js",
   "scripts": {
     "postinstall": "install-app-deps",
@@ -12,7 +13,10 @@
     "pack": "electron-builder build --dir",
     "dist": "electron-builder build"
   },
-  "author": "João Dias",
+  "author": {
+    "name": "joaomgcd",
+    "email": "support@joaoapps.com"
+  },
   "license": "ISC",
   "devDependencies": {
     "@electron-forge/cli": "^6.0.0-beta.52",
@@ -32,8 +36,10 @@
   },
   "build": {
     "appId": "com.joaomgcd.taskerpermissions",
-    "extraFiles": [
-      "**/bin/**"
+    "extraFiles":[
+      "**/bin/mac/**",
+      "**/bin/windows/**",
+      "**/bin/linux/**"
     ],
     "dmg": {
       "contents": [
