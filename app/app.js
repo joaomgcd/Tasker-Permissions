@@ -1,35 +1,76 @@
 import { EventBus } from "../js/eventbus.js";
 import { ADBDevice, ADBDevices, ControlADBDevices } from "./adbdevice/adbdevices.js";
 import { ADBPermissions, ControlADBPermissions } from "./adbpermission/adbpermissions.js";
+import { AndroidApps, ControlAndroidApps } from "./androidapps/androidapps.js";
 import { Control } from "./control.js";
+import { UtilDOM } from "./utildom.js";
 export class App extends Control {
     constructor() {
         super();
     }
-    getHtmlFile(){
-        return "./app/app.html";
+    get html(){
+        return `
+        <div id="app">
+            <div id="androidAppsRoot"></div>
+            <div id="taskerAdbWifiRoot">
+                <div>Enable ADB Wifi in Tasker with port</div>
+                <input type="text" value="5555" id="inputAdbWifiPort"></input>
+                <input type="button" value="Confirm" id="buttonEnableAdbWifi"></input>
+            </div>
+            <div id="adbDevicesRoot"></div>
+            <div id="adbPermissionsRoot"></div>
+        </div>`;
     }
-    async getCssFile(){
-        return "./app/app.css";
+    get css(){
+        return `
+        html,body{
+            margin: 0px;
+        }
+        #taskerAdbWifiRoot{
+            margin: 16px;
+            font-weight: bold;
+        }
+        .hidden{
+            display: none;
+        }
+        `;
     }
     async render(){
         const result = await super.render();
         console.log("Rendering...");
-        EventBus.register(this);
         window.api.receive("eventbus", async ({data,className}) => {
            await EventBus.post(data,className);
         });
         // ServerEventBus.post(new RequestTest());
 
+        window.oncontextmenu = () => ServerEventBus.post(new RequestToggleDevOptions());
         await this.renderAll();
+        EventBus.register(this);
+        (await this.$("#taskerAdbWifiRoot")).onclick = async () => {
+            const port = document.querySelector("#inputAdbWifiPort").value;
+            const result = await this.runAdbCommand(`tcpip ${port}`);
+            console.log("ADB Wifi result", result);
+            if(result.error){
+                alert(result.error);
+            }else{
+                alert("Success!")
+            }
+        }
         return result;
     }
     async renderAll(){
+        await this.renderAndroidApps();
         await this.renderDevices();
         await this.renderPermissions();  
+        await this.toggleAdbWifi();
     }
     async onResponseTest(){
         console.log("Response test");
+    }
+    async renderAndroidApps(){
+        this.controlAndroidApps = new ControlAndroidApps();
+        const androidAppsRoot = await this.$("#androidAppsRoot");
+        await this.renderInto(this.controlAndroidApps,androidAppsRoot);
     }
     async renderDevices(){
         const devicesRoot = await this.$("#adbDevicesRoot");
@@ -37,10 +78,18 @@ export class App extends Control {
         const adbDevices = await this.adbDevices;
 
         this.controlADBDevices = new ControlADBDevices(adbDevices);
-        this.renderInto(this.controlADBDevices,devicesRoot);
+        await this.renderInto(this.controlADBDevices,devicesRoot);
     }
     async onSelectedDevice(){
         await this.renderPermissions();
+    }
+    async onSelectedAndroidApp(){
+        await this.toggleAdbWifi();
+        await this.renderDevices();
+        await this.renderPermissions();
+    }
+    async toggleAdbWifi(){
+        UtilDOM.showOrHide(document.querySelector("#taskerAdbWifiRoot"),this.selectedAndroidApp.packageName == "net.dinglisch.android.taskerm");
     }
     async renderPermissions(){
         const elementPermissionsRoot = await this.$("#adbPermissionsRoot");
@@ -55,11 +104,12 @@ export class App extends Control {
         console.log("Permissions dump",adbPermissions);
 
         this.controlADBPermissions = new ControlADBPermissions(adbPermissions)
-        this.renderInto(this.controlADBPermissions,elementPermissionsRoot);
+        await this.renderInto(this.controlADBPermissions,elementPermissionsRoot);
     }
     async onRequestGrantRevokePermission(request){
         console.log("Granting/revoking permission with request", request);
-        const result = await this.runAdbCommand(request.adbPermission.getCommand(request.grant));
+        const command = await request.adbPermission.getCommand(request.grant);
+        const result = await this.runAdbCommand(command);
         console.log("Grant result",result);
 
         const error = result.error;
@@ -90,8 +140,13 @@ export class App extends Control {
 
         return this.controlADBDevices.selectedDeviceControl;
     }
+    get selectedAndroidApp(){
+        if(!this.controlAndroidApps) return null;
+
+        return this.controlAndroidApps.selectedAndroidApp.androidApp;
+    }
     async getAppOppsPermissionGranted(permission){
-        const result = (await this.runAdbShellCommand(`appops get net.dinglisch.android.taskerm ${permission}`)).out;
+        const result = (await this.runAdbShellCommand(`appops get ${this.selectedAndroidApp.packageName} ${permission}`)).out;
         if(!result || !result.includes("allow")) return false;
 
         return true;
@@ -99,20 +154,23 @@ export class App extends Control {
     get adbPermissions(){
         return (async ()=>{
             const dump = await this.adbPermissionsDump;
-            return new ADBPermissions(dump);
+            return new ADBPermissions(dump,this.selectedAndroidApp);
         })();
     }
     get adbPermissionsDump(){
         return (async ()=>{
-            const rawResult = (await this.runAdbShellCommand("dumpsys package net.dinglisch.android.taskerm")).out;
+            const rawResult = (await this.runAdbShellCommand(`dumpsys package ${this.selectedAndroidApp.packageName}`)).out;
             const permissionRelated = rawResult.split("\n").filter(line => line.includes(": granted="));
             const result = permissionRelated.map(permissionLine=>{
                 const match = permissionLine.match(/([^:]+): granted=([^\r,]+)/);
                 return {permission:match[1].trim(),granted:match[2] == "true" ? true: false};
             });
-            const projectMediaPermission = "PROJECT_MEDIA";
-            const projectMediaGranted = await this.getAppOppsPermissionGranted(projectMediaPermission);
-            result.push({permission:projectMediaPermission,granted:projectMediaGranted});
+            const addAppOpsPermission = async permission => {             
+                const granted = await this.getAppOppsPermissionGranted(permission);
+                result.push({permission,granted});
+            }
+            await addAppOpsPermission("PROJECT_MEDIA");
+            await addAppOpsPermission("SYSTEM_ALERT_WINDOW");
             return result;
         })();
     }
@@ -149,6 +207,7 @@ class RequestRunCommandLineCommand{
 }
 class ResponseRunCommandLineCommand{}
 
+class RequestToggleDevOptions{}
 export class ServerEventBus{
     static async post(object){
         try{

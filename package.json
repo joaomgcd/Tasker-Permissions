@@ -74,20 +74,11 @@
       },
       "makers": [
         {
-          "name": "@electron-forge/maker-squirrel",
-          "config": {
-            "name": "com.joaomgcd.join",
-            "iconUrl": "https://raw.githubusercontent.com/markwal/GpxUi/master/gpx.ico",
-            "loadingGif": "joinloading.png",
-            "setupIcon": "join.ico"
-          }
-        },
-        {
           "name": "@electron-forge/maker-zip",
           "platforms": [
             "darwin"
           ],
-          "icon": "./join.png"
+          "icon": "./adbpermissions.png"
         },
         {
           "name": "@electron-forge/maker-deb",

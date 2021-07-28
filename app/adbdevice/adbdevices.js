@@ -35,7 +35,7 @@ export class ControlADBDevices extends Control {
         return `
         <div class="adbDevicesRoot">        
             <div id="adbDevicesReload">
-                Reload
+                <b>Reload Devices/Permissions</b>
             </div>
             <div id="deviceListWrapper">
                 <h4 id="elementADBDevicesTitle">Select Your Device Below</h4>

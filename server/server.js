@@ -19,7 +19,8 @@ export class Server{
             },
             bounds:{width: 800, height: 800}
         }
-        const mainWindow = new BrowserWindow(args)
+        const mainWindow = new BrowserWindow(args);
+        mainWindow.setMenuBarVisibility(false);
         
         mainWindow.loadFile('index.html')
       
@@ -49,7 +50,8 @@ export class Server{
         return require('electron').app.getAppPath().replaceAll("\\","/");
     }
     async logConsole(log,args){
-        this.sendToPageEventBus(new RequestConsoleLog(log,args));
+        console.log(log,args);
+        // this.sendToPageEventBus(new RequestConsoleLog(log,args));
     }
     async onRequestRunCommandLineCommand({command,args,prependCurrentPath}){
         if(!command){
@@ -71,6 +73,9 @@ export class Server{
             error = JSON.parse(error);
             await this.sendToPageEventBus(new ResponseRunCommandLineCommand(error));
         }
+    }
+    async onRequestToggleDevOptions(){
+        this.window.webContents.toggleDevTools()
     }
 }
 

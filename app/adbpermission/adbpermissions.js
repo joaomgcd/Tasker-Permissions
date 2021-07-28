@@ -3,43 +3,129 @@ import { Control } from "../control.js";
 import { Models, Model } from "../model.js";
 import { UtilDOM } from "../utildom.js";
 export class ADBPermissions extends Models {
-    constructor(permissionsFromSystem, items = [
-        {prettyName: "Write Secure Settings", isShell:true,isPmGrant:true,permission:"android.permission.WRITE_SECURE_SETTINGS",usedFor:"The <b>Custom Setting</b> action and some other specific setting actions."},
-        {prettyName: "Read System Logs", isShell:true,isPmGrant:true,permission:"android.permission.READ_LOGS",usedFor:"The <b>Logcat Entry</b> event and on devices with Android 10+ to read the device's clipboard."},
-        {prettyName: "Running Services", isShell:true,isPmGrant:true,permission:"android.permission.DUMP",usedFor:"Checking what services are running on your device."},
-        {prettyName: "Long-click Volume Buttons", isShell:true,isPmGrant:true,permission:"android.permission.SET_VOLUME_KEY_LONG_PRESS_LISTENER",usedFor:"Checking when you long press the volume keys on your device."},
-        {prettyName: "Media Buttons", isShell:true,isPmGrant:true,permission:"android.permission.SET_MEDIA_KEY_LISTENER",usedFor:"Checking when you press media keys on your device."},
-        {prettyName: "Capture Screen", isShell:true,isPmGrant:false,permission:"PROJECT_MEDIA",usedFor:"Taking screenshots and recording the screen without having the Android system prompting you to allow it every time."}
+    constructor(permissionsFromSystem, androidApp, items = [
+        {
+            prettyName: "Write Secure Settings", isShell: true, isPmGrant: true, permission: "android.permission.WRITE_SECURE_SETTINGS",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "The <b>Custom Setting</b> action and some other specific setting actions.",
+                "com.joaomgcd.join": "To read the clipboard, along with the <b>Read System Logs</b> and <b>Draw Over Other Apps</b> permissions",
+                "com.joaomgcd.autoinput": "Automatically starting and stopping the AutoInput accessibility service.",
+                "com.joaomgcd.autowear": "Setting some special settings on your watch that only work with this permission."
+            }
+        },
+        {
+            prettyName: "Draw Over Other Apps", isShell: true, isPmGrant: false, permission: "SYSTEM_ALERT_WINDOW",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "To launch itself from the background in various situations and to draw scenes over other apps",
+                "com.joaomgcd.join": "To read the clipboard, along with the <b>Write Secure Settings</b> and <b>Draw Over Other Apps</b> permissions, to open links from the background and to draw the clipboard bubbles"
+            }
+        },
+        {
+            prettyName: "Read System Logs", isShell: true, isPmGrant: true, permission: "android.permission.READ_LOGS",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "The <b>Logcat Entry</b> event and on devices with Android 10+ to read the device's clipboard.",
+                "com.joaomgcd.join": "To read the clipboard, along with the <b>Write Secure Settings</b> and <b>Draw Over Other Apps</b> permissions"
+            }
+        },
+        {
+            prettyName: "Running Services", isShell: true, isPmGrant: true, permission: "android.permission.DUMP",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Checking what services are running on your device."
+            }
+        },
+        {
+            prettyName: "Long-click Volume Buttons", isShell: true, isPmGrant: true, permission: "android.permission.SET_VOLUME_KEY_LONG_PRESS_LISTENER",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Checking when you long press the volume keys on your device."
+            }
+        },
+        {
+            prettyName: "Media Buttons", isShell: true, isPmGrant: true, permission: "android.permission.SET_MEDIA_KEY_LISTENER",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Checking when you press media keys on your device."
+            }
+        },
+        {
+            prettyName: "Capture Screen", isShell: true, isPmGrant: false, permission: "PROJECT_MEDIA",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Taking screenshots and recording the screen without having the Android system prompting you to allow it every time.",
+                "com.joaomgcd.join": "Taking remote screenshots and screen recordings without having the Android system prompting you to allow it every time."
+            }
+        },
+        {
+            prettyName: "Change System Locale", isShell: true, isPmGrant: true, permission: "android.permission.CHANGE_CONFIGURATION",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Changing the system's current locale"
+            }
+        }/*,
+        {
+            prettyName: "Device Admin", isShell: true, isPmGrant: true, permission: "android.permission.BIND_DEVICE_ADMIN",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Locking screen with <b>System Lock</b> action and other admin related actions"
+            }
+        },
+        {
+            prettyName: "Notification Interception", isShell: true, isPmGrant: true, permission: "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Intercepting notifications with the <b>Notification</b> event",
+                "com.joaomgcd.join": "Intercepting notifications and syncing them with other devices"
+            }
+        }*/,
+        {
+            prettyName: "Application Usage Stats", isShell: true, isPmGrant: true, permission: "android.permission.PACKAGE_USAGE_STATS",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Get app usage info, react to current app with the <b>App</b> state and more! On some devices this is needed to get the <b>Services</b> option to work with the <b>App</b> context in Tasker."
+            }
+        }/*,
+        {
+            prettyName: "Accessibility Service", isShell: true, isPmGrant: true, permission: "android.permission.BIND_ACCESSIBILITY_SERVICE",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Detect app launches and other accessibility related events/actions."
+            }
+        }*/
     ]) {
-        super(items.map(item=>{
+        super(items.map(item => {
+            const forAndroidApp = item.usedFor[androidApp.packageName];
+            if (!forAndroidApp) return;
+
+            item.usedFor = forAndroidApp;
+            item.androidApp = androidApp;
             const fromSystem = permissionsFromSystem.find(permission => permission.permission == item.permission);
-            if(!fromSystem) return item;
+            if (!fromSystem) return item;
 
             item.granted = fromSystem.granted;
             return item;
-        }));
+        }).filter(item => item ? true : false));
     }
     get modelClass() {
         return ADBPermission;
     }
 }
 export class ADBPermission extends Model {
-    constructor(args = { prettyName, isShell, isPmGrant, permission }) {
+    constructor(args = { prettyName, isShell, isPmGrant, permission, androidApp }) {
         super(args);
         this.prettyName = args.prettyName;
         this.isShell = args.isShell;
         this.isPmGrant = args.isPmGrant;
         this.permission = args.permission;
         this.usedFor = args.usedFor;
+        this.androidApp = args.androidApp;
     }
 
-    getCommand(grant){
+    async getCommand(grant) {
+        const packageName = this.androidApp.packageName;
         let command = this.isShell ? "shell" : "";
-        command += this.isPmGrant ? ` pm ${grant ? "grant" : "revoke"}` : " appops set";
-        command += ` net.dinglisch.android.taskerm ${this.permission}`;
-        if(!this.isPmGrant){
+        command += ` "`;
+        command += this.isPmGrant ? `pm ${grant ? "grant" : "revoke"}` : "appops set";
+        command += ` ${packageName} ${this.permission}`;
+        if (!this.isPmGrant) {
             command += " " + (grant ? "allow" : "deny");
         }
+        if(this.permission == "android.permission.READ_LOGS" && grant){
+            alert(`Granting this permission will restart ${this.androidApp.name} on your Android device.`);
+            command += ` & am force-stop ${packageName}`;
+        }
+        command += `"`;
         return command;
     }
 }
@@ -67,17 +153,19 @@ export class ControlADBPermissions extends Control {
         return `
         #adbPermissions{
             display: flex;
-            flex-direction:column;
+            flex-direction: row;
+            flex-wrap: wrap;
             width: 98%;
         }
         .adbPermission{
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-items: center;
-            width: 100%;
             background: #dbdbdb;
             margin: 8px;
             padding: 4px;
+            max-width: 300px;
         }
         .adbPermissionInfo{
             display: flex;
@@ -92,7 +180,7 @@ export class ControlADBPermissions extends Control {
         }
         .adbPermissionCode{
             padding: 4px;
-            font-size: 70%;
+            font-size: 60%;
         }
         .adbPermissionUsedFor{
             padding-top: 8px;
@@ -153,24 +241,24 @@ export class ControlADBPermission extends Control {
         this.elementADBPermissionName.innerHTML = this.adbPermission.prettyName;
         this.elementADBPermissionCode.innerHTML = `(${this.adbPermission.permission})`;
         this.elementADBPermissionUsedFor.innerHTML = `<b>Used for</b>: ${this.adbPermission.usedFor}`;
-        
+
         const granted = this.granted;
-        UtilDOM.addOrRemoveClass(this.elementADBPermissionGrantRevoke,granted,"granted");
+        UtilDOM.addOrRemoveClass(this.elementADBPermissionGrantRevoke, granted, "granted");
         this.elementADBPermissionGrantRevokeContent.innerHTML = granted ? "Granted (click to revoke)" : "Revoked (click to grant)"
 
         this.elementADBPermissionGrantRevoke.onclick = async () => {
             const adbPermission = this.adbPermission;
             const grant = !this.granted;
-            await EventBus.post(new RequestGrantRevokePermission({adbPermission,grant}));
+            await EventBus.post(new RequestGrantRevokePermission({ adbPermission, grant }));
         }
 
     }
-    get granted(){
+    get granted() {
         return this.adbPermission.granted;
     }
 }
-class RequestGrantRevokePermission{
-    constructor({adbPermission, grant}){
+class RequestGrantRevokePermission {
+    constructor({ adbPermission, grant }) {
         this.adbPermission = adbPermission;
         this.grant = grant;
     }
