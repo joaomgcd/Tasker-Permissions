@@ -90,6 +90,7 @@ export class Server{
             // command = (await this.getCurrentAppPath()) + "/" + command;
             command = this.execFolder + "/" + command;
         }
+        command = command.replaceAll("resources/app.asar/","");
         this.logConsole("Running command line Server",command,args);
         try{
             const result = await CommandLine.run(command,args);
