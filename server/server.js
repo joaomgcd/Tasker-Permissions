@@ -26,8 +26,7 @@ export class Server{
         if(this.isLinux) return "linux";
     }
     get execFolder(){
-        const exeFile = process.execPath;
-        return exeFile.substring(0,exeFile.lastIndexOf("\\")) + "/"
+        return this.getCurrentAppPath();
     }
     async createWindow() {
         const args = {
@@ -66,12 +65,13 @@ export class Server{
         console.log("Request test");
         this.sendToPageEventBus(new ResponseTest());
     }
-    async getCurrentAppPath(){
+    getCurrentAppPath(){
         return require('electron').app.getAppPath().replaceAll("\\","/");
     }
     async logConsole(log,args){
         console.log(log,args);
-        // this.sendToPageEventBus(new RequestConsoleLog(log,args));
+
+        this.sendToPageEventBus(new RequestConsoleLog(log,args));
     }
     async onRequestRunCommandLineCommand({command,args,prependCurrentPath}){
         if(!command){
@@ -86,7 +86,7 @@ export class Server{
             // command = (await this.getCurrentAppPath()) + "/" + command;
             command = this.execFolder + "/" + command;
         }
-        this.logConsole("Running command line",command,args);
+        this.logConsole("Running command line Server",command,args);
         try{
             const result = await CommandLine.run(command,args);
             this.logConsole("Command line result",result);

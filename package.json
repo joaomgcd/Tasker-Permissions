@@ -32,7 +32,9 @@
   },
   "build": {
     "appId": "com.joaomgcd.taskerpermissions",
-    "extraFiles": ["**/bin/*"],
+    "extraFiles": [
+      "**/bin/**"
+    ],
     "dmg": {
       "contents": [
         {
