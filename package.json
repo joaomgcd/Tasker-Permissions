@@ -1,6 +1,6 @@
 {
   "name": "com.joaomgcd.taskerpermissions",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Easily grant permissions for Tasker using a simple UI",
   "homepage": "https://github.com/joaomgcd/Tasker-Permissions",
   "main": "main_esm.js",
