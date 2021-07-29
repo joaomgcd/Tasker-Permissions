@@ -71,7 +71,7 @@ export class Server{
     async logConsole(log,args){
         console.log(log,args);
 
-        this.sendToPageEventBus(new RequestConsoleLog(log,args));
+        // this.sendToPageEventBus(new RequestConsoleLog(log,args));
     }
     async onRequestRunCommandLineCommand({command,args,prependCurrentPath}){
         if(!command){

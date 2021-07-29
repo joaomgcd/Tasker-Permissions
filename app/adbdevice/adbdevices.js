@@ -101,6 +101,7 @@ export class ControlADBDevices extends Control {
         this.elementInstructions = await this.$("#instructionsToConnectDevice");
         this.elementAdbWifi = await this.$("#taskerAdbWifiRoot");
         this.elementAdbWifiPort = await this.$("#inputAdbWifiPort");
+        this.elementAdbWifiButton = await this.$("#buttonEnableAdbWifi");
 
         this.controls = await this.renderList(this.elementADBDevices, this.adbDevices, ControlADBDevice);
         this.elementADBDevicesReload.onclick = async () => {
@@ -124,7 +125,7 @@ export class ControlADBDevices extends Control {
         }else{            
             UtilDOM.hide(this.elementInstructions);
             UtilDOM.showOrHide(this.elementAdbWifi,this.androidApp.packageName == "net.dinglisch.android.taskerm");
-            this.elementAdbWifi.onclick = async () => {
+            this.elementAdbWifiButton.onclick = async () => {
                 const port = this.elementAdbWifiPort.value;
                 EventBus.post(new RequestRunAdbCommand(`tcpip ${port}`));
             }
@@ -179,6 +180,7 @@ export class ControlADBDevice extends Control {
         this.elementADBDevice.onclick = async () => {
             await EventBus.post(new UnSelectDevices());
             this.selected = true;
+            await EventBus.post(new SelectedDevice());
         }
     }
     get selected(){
@@ -186,9 +188,6 @@ export class ControlADBDevice extends Control {
     }
     set selected(value){
         UtilDOM.addOrRemoveClass(this.elementADBDevice,value,"selected");
-        if(value){
-            EventBus.post(new SelectedDevice());
-        }
     }
 }
 class RequestReloadDevices {}

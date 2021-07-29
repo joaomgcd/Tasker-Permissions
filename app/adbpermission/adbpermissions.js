@@ -5,19 +5,19 @@ import { UtilDOM } from "../utildom.js";
 export class ADBPermissions extends Models {
     constructor(permissionsFromSystem, androidApp, items = [
         {
+            prettyName: "Draw Over Other Apps", isShell: true, isPmGrant: false, canBeGrantedInSystem: true, permission: "SYSTEM_ALERT_WINDOW",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "To launch itself from the background in various situations and to draw scenes over other apps.<br/><b>THIS IS MANDATORY FOR TASKER</b>",
+                "com.joaomgcd.join": "To read the clipboard, along with the <b>Write Secure Settings</b> and <b>Draw Over Other Apps</b> permissions, to open links from the background and to draw the clipboard bubbles"
+            }
+        },
+        {
             prettyName: "Write Secure Settings", isShell: true, isPmGrant: true, permission: "android.permission.WRITE_SECURE_SETTINGS",
             usedFor: {
                 "net.dinglisch.android.taskerm": "The <b>Custom Setting</b> action and some other specific setting actions.",
                 "com.joaomgcd.join": "To read the clipboard, along with the <b>Read System Logs</b> and <b>Draw Over Other Apps</b> permissions",
                 "com.joaomgcd.autoinput": "Automatically starting and stopping the AutoInput accessibility service.",
                 "com.joaomgcd.autowear": "Setting some special settings on your watch that only work with this permission."
-            }
-        },
-        {
-            prettyName: "Draw Over Other Apps", isShell: true, isPmGrant: false, permission: "SYSTEM_ALERT_WINDOW",
-            usedFor: {
-                "net.dinglisch.android.taskerm": "To launch itself from the background in various situations and to draw scenes over other apps",
-                "com.joaomgcd.join": "To read the clipboard, along with the <b>Write Secure Settings</b> and <b>Draw Over Other Apps</b> permissions, to open links from the background and to draw the clipboard bubbles"
             }
         },
         {
@@ -49,7 +49,20 @@ export class ADBPermissions extends Models {
             prettyName: "Capture Screen", isShell: true, isPmGrant: false, permission: "PROJECT_MEDIA",
             usedFor: {
                 "net.dinglisch.android.taskerm": "Taking screenshots and recording the screen without having the Android system prompting you to allow it every time.",
-                "com.joaomgcd.join": "Taking remote screenshots and screen recordings without having the Android system prompting you to allow it every time."
+                "com.joaomgcd.join": "Taking remote screenshots and screen recordings without having the Android system prompting you to allow it every time.",
+                "com.joaomgcd.autoinput": "Taking screenshots and recording the screen without having the Android system prompting you to allow it every time."
+            }
+        },
+        {
+            prettyName: "Application Usage Stats", isShell: true, isPmGrant: false, canBeGrantedInSystem: true, permission: "GET_USAGE_STATS",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Getting app info, checking which app is opened and other app activity related stuff."
+            }
+        },
+        {
+            prettyName: "Write Settings", isShell: true, isPmGrant: false, canBeGrantedInSystem: true, permission: "WRITE_SETTINGS",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "Changing various system settings."
             }
         },
         {
@@ -72,9 +85,9 @@ export class ADBPermissions extends Models {
             }
         }*/,
         {
-            prettyName: "Application Usage Stats", isShell: true, isPmGrant: true, permission: "android.permission.PACKAGE_USAGE_STATS",
+            prettyName: "Package Usage Stats", isShell: true, isPmGrant: true, permission: "android.permission.PACKAGE_USAGE_STATS",
             usedFor: {
-                "net.dinglisch.android.taskerm": "Get app usage info, react to current app with the <b>App</b> state and more! On some devices this is needed to get the <b>Services</b> option to work with the <b>App</b> context in Tasker."
+                "net.dinglisch.android.taskerm": "On some devices this is needed to get the <b>Services</b> option to work with the <b>App</b> context in Tasker."
             }
         }/*,
         {
@@ -84,7 +97,7 @@ export class ADBPermissions extends Models {
             }
         }*/
     ]) {
-        super(items.map(item => {
+        super(Number.isInteger(permissionsFromSystem) ? permissionsFromSystem : items.map(item => {
             const forAndroidApp = item.usedFor[androidApp.packageName];
             if (!forAndroidApp) return;
 
@@ -99,6 +112,9 @@ export class ADBPermissions extends Models {
     }
     get modelClass() {
         return ADBPermission;
+    }
+    get allGranted(){
+        return this.find(permission => !permission.granted) ? false : true;
     }
 }
 export class ADBPermission extends Model {
@@ -122,7 +138,7 @@ export class ADBPermission extends Model {
             command += " " + (grant ? "allow" : "deny");
         }
         if(this.permission == "android.permission.READ_LOGS" && grant){
-            alert(`Granting this permission will restart ${this.androidApp.name} on your Android device.`);
+            alert(`Granting the Read Logs permission will restart ${this.androidApp.name} on your Android device.`);
             command += ` & am force-stop ${packageName}`;
         }
         command += `"`;
@@ -145,6 +161,9 @@ export class ControlADBPermissions extends Control {
         return `
         <div>
         <h4>Permissions</h4>
+            <span class="adbPermissionGrantRevoke">
+                <span class="adbPermissionGrantRevokeContent"></span>
+            </span>
             <div id="adbPermissions">
             </div>
         </div>`;
@@ -204,6 +223,17 @@ export class ControlADBPermissions extends Control {
     }
     async renderSpecific(root) {
         this.elementADBPermissions = await this.$("#adbPermissions");
+        this.elementGrantAllPermissions = await this.$(".adbPermissionGrantRevoke");
+        this.elementGrantAllPermissionsContent = await this.$(".adbPermissionGrantRevokeContent");
+        const allGranted = this.adbPermissions.allGranted;
+        UtilDOM.showOrHide(this.elementGrantAllPermissions,!allGranted)
+        this.elementGrantAllPermissionsContent.innerHTML = "Grant All Permissions";
+        if(!allGranted){
+            this.elementGrantAllPermissions.onclick = async () => {
+                this.elementGrantAllPermissionsContent.innerHTML = "Getting missing permissions...";
+                await EventBus.post(new RequestGrantAllPermissions());
+            }
+        }
 
         this.controls = await this.renderList(this.elementADBPermissions, this.adbPermissions, ControlADBPermission);
     }
@@ -240,7 +270,7 @@ export class ControlADBPermission extends Control {
 
         this.elementADBPermissionName.innerHTML = this.adbPermission.prettyName;
         this.elementADBPermissionCode.innerHTML = `(${this.adbPermission.permission})`;
-        this.elementADBPermissionUsedFor.innerHTML = `<b>Used for</b>: ${this.adbPermission.usedFor}`;
+        this.elementADBPermissionUsedFor.innerHTML = `<b>Used for</b>: ${this.adbPermission.usedFor}${this.adbPermission.canBeGrantedInSystem ? "<br/><br/><b>Note</b>: this permission can be manually granted in Android itself" : ""}`;
 
         const granted = this.granted;
         UtilDOM.addOrRemoveClass(this.elementADBPermissionGrantRevoke, granted, "granted");
@@ -257,6 +287,7 @@ export class ControlADBPermission extends Control {
         return this.adbPermission.granted;
     }
 }
+class RequestGrantAllPermissions {}
 class RequestGrantRevokePermission {
     constructor({ adbPermission, grant }) {
         this.adbPermission = adbPermission;

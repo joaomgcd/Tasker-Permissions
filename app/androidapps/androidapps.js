@@ -41,7 +41,7 @@ export class ControlAndroidApps extends Control {
             icon: `autoinputsmall.png`
         },{
             packageName:"com.joaomgcd.autowear",
-            name:"AutoWear",
+            name:"AutoWear (Watch)",
             icon: `autowearsmall.png`
         }
     ])) {
@@ -64,13 +64,15 @@ export class ControlAndroidApps extends Control {
         }
         #androidApps{
             display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
         }
         .androidApp{
             display: flex;
             flex-direction: column;
             align-items: center;
             cursor: pointer;
-            min-width: 80px;
+            min-width: 160px;
         }
         .androidApp.selected{
             background-color: blue;
@@ -129,6 +131,7 @@ export class ControlAndroidApp extends Control {
         this.elementAndroidApp.onclick = async () => {
             await EventBus.post(new UnSelectAndroidApps());
             this.selected = true;
+            await EventBus.post(new SelectedAndroidApp());
         }
     }
     get selected(){
@@ -136,9 +139,6 @@ export class ControlAndroidApp extends Control {
     }
     set selected(value){
         UtilDOM.addOrRemoveClass(this.elementAndroidApp,value,"selected");
-        if(value){
-            EventBus.post(new SelectedAndroidApp());
-        }
     }
 }
 class SelectedAndroidApp {}

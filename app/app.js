@@ -22,7 +22,7 @@ export class App extends Control {
             margin: 0px;
         }
         .hidden{
-            display: none;
+            display: none !important;
         }
         `;
     }
@@ -82,17 +82,51 @@ export class App extends Control {
         this.controlADBPermissions = new ControlADBPermissions(adbPermissions)
         await this.renderInto(this.controlADBPermissions,elementPermissionsRoot);
     }
-    async onRequestGrantRevokePermission(request){
-        console.log("Granting/revoking permission with request", request);
-        const command = await request.adbPermission.getCommand(request.grant);
-        const result = await this.runAdbCommand(command);
-        console.log("Grant result",result);
+    async grantAllPermissions(){
+        const adbPermissions = (await this.adbPermissions).filter(permission => !permission.granted);
+        const length = adbPermissions.length;
 
-        const error = result.error;
-        if(error){
-            alert(`Error: ${error}`);
+        if(length == 0){
+            alert("All permissions already granted!");
+            return;
         }
 
+        const grant = confirm(`Grant ${length} missing permissions?`);
+        if(!grant) return;
+
+        for(const adbPermission of adbPermissions){
+            const result = await this.grantRevokePermission(adbPermission,true);
+            const wasGood = await this.handleGrantRevokePermissionResult(result);
+            if(!wasGood) return;
+        }
+        alert("Done!");
+        await this.renderPermissions();
+    }
+    async grantRevokePermission(adbPermission, grant){
+        const command = await adbPermission.getCommand(grant);
+        return await this.runAdbCommand(command);
+    }
+    async handleGrantRevokePermissionResult(result){
+        const error = result.error;
+        if(error){
+            if(error.includes("GRANT_RUNTIME_PERMISSIONS")){
+                alert(`It seems like you're on device that requires some special permissions for ADB to be able to grant permissions on your phone. Can you please enable the option "Disable permission Monitoring" or "USB Debugging (Security Settings)" under "Developer options" and then try again?`)
+            }else{
+                alert(`Error: ${error}`);
+            }
+            return false;
+        }
+        return true;
+    }
+    async onRequestGrantAllPermissions(){
+        await this.grantAllPermissions();
+    }
+    async onRequestGrantRevokePermission(request){
+        console.log("Granting/revoking permission with request", request);        
+        const result = await this.grantRevokePermission(request.adbPermission, request.grant);
+        console.log("Grant result",result);
+
+        this.handleGrantRevokePermissionResult(result);
         await this.renderPermissions();  
     }
     get adbDevices(){
@@ -147,6 +181,8 @@ export class App extends Control {
             }
             await addAppOpsPermission("PROJECT_MEDIA");
             await addAppOpsPermission("SYSTEM_ALERT_WINDOW");
+            await addAppOpsPermission("GET_USAGE_STATS");
+            await addAppOpsPermission("WRITE_SETTINGS");
             return result;
         })();
     }
