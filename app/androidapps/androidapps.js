@@ -40,6 +40,10 @@ export class ControlAndroidApps extends Control {
             name:"AutoInput",
             icon: `autoinputsmall.png`
         },{
+            packageName:"com.joaomgcd.autotools",
+            name:"AutoTools",
+            icon: `autotoolssmall.png`
+        },{
             packageName:"com.joaomgcd.autowear",
             name:"AutoWear (Watch)",
             icon: `autowearsmall.png`

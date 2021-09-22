@@ -17,7 +17,8 @@ export class ADBPermissions extends Models {
                 "net.dinglisch.android.taskerm": "The <b>Custom Setting</b> action and some other specific setting actions.",
                 "com.joaomgcd.join": "To read the clipboard, along with the <b>Read System Logs</b> and <b>Draw Over Other Apps</b> permissions",
                 "com.joaomgcd.autoinput": "Automatically starting and stopping the AutoInput accessibility service.",
-                "com.joaomgcd.autowear": "Setting some special settings on your watch that only work with this permission."
+                "com.joaomgcd.autowear": "Setting some special settings on your watch that only work with this permission.",
+                "com.joaomgcd.autotools": "The 'Secure Settings' action."
             }
         },
         {

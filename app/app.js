@@ -139,9 +139,13 @@ export class App extends Control {
                 const id = deviceRaw.substring(0,result.indexOf(" "));
                 if(!id) return null;
 
-                const model = result.match(/model:([^ ]+)/)[1];
-                const device = result.match(/device:([^ ]+)/)[1];
-                return new ADBDevice({id, model,device});
+                try{
+                    const model = result.match(/model:([^ ]+)/)[1];
+                    const device = result.match(/device:([^ ]+)/)[1];
+                    return new ADBDevice({id, model,device});                        
+                }catch{
+                    return new ADBDevice({id, model:"unknown",device:"unknown"});                  
+                }
             }).filter(device=>device ? true : false));
         })();
     }    
