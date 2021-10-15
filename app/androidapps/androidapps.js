@@ -32,6 +32,10 @@ export class ControlAndroidApps extends Control {
             name:"Tasker",
             icon: `taskersmall.png`
         },{
+            packageName:"com.joaomgcd.taskersettings",
+            name:"Tasker Settings",
+            icon: `taskersettingssmall.png`
+        },{
             packageName:"com.joaomgcd.join",
             name:"Join",
             icon: `joinsmall.png`
