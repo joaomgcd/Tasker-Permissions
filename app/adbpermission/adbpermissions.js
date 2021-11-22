@@ -30,7 +30,7 @@ export class ADBPermissions extends Models {
             }
         },
         {
-            prettyName: "Running Services", isShell: true, isPmGrant: true, permission: "android.permission.DUMP",
+            prettyName: "Running Services", isShell: true, isPmGrant: true,needsRestart:true, permission: "android.permission.DUMP",
             usedFor: {
                 "net.dinglisch.android.taskerm": "Checking what services are running on your device."
             }
@@ -91,6 +91,12 @@ export class ADBPermissions extends Models {
             usedFor: {
                 "net.dinglisch.android.taskerm": "On some devices this is needed to get the <b>Services</b> option to work with the <b>App</b> context in Tasker."
             }
+        },
+        {
+            prettyName: "Access Hidden APIs", isShell: true, isPmGrant: false, isSetting:true, needsRestart:true, permission: "hidden_api_policy",
+            usedFor: {
+                "net.dinglisch.android.taskerm": "On devices running Android 11 and above this is needed for some actions like ADB Wifi or Mobile Network Type."
+            }
         }/*,
         {
             prettyName: "Accessibility Service", isShell: true, isPmGrant: true, permission: "android.permission.BIND_ACCESSIBILITY_SERVICE",
@@ -125,22 +131,32 @@ export class ADBPermission extends Model {
         this.prettyName = args.prettyName;
         this.isShell = args.isShell;
         this.isPmGrant = args.isPmGrant;
+        this.isSetting = args.isSetting;
         this.permission = args.permission;
         this.usedFor = args.usedFor;
         this.androidApp = args.androidApp;
+        this.needsRestart = args.needsRestart;
     }
 
     async getCommand(grant) {
         const packageName = this.androidApp.packageName;
         let command = this.isShell ? "shell" : "";
         command += ` "`;
-        command += this.isPmGrant ? `pm ${grant ? "grant" : "revoke"}` : "appops set";
-        command += ` ${packageName} ${this.permission}`;
-        if (!this.isPmGrant) {
+        if(this.isSetting){
+            if(grant){
+                command += `settings put global ${this.permission} 1`;
+            }else{
+                command += `settings delete global ${this.permission}`;
+            }
+        }else{
+            command += this.isPmGrant ? `pm ${grant ? "grant" : "revoke"}` : "appops set";
+            command += ` ${packageName} ${this.permission}`;
+        }
+        if (!this.isPmGrant && !this.isSetting) {
             command += " " + (grant ? "allow" : "deny");
         }
-        if(this.permission == "android.permission.READ_LOGS" && grant){
-            alert(`Granting the Read Logs permission will restart ${this.androidApp.name} on your Android device.`);
+        if(this.needsRestart && grant){
+            alert(`Granting the ${this.prettyName} permission will restart ${this.androidApp.name} on your Android device.`);
             command += ` & am force-stop ${packageName}`;
         }
         command += `"`;

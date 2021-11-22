@@ -165,6 +165,12 @@ export class App extends Control {
 
         return true;
     }
+    async getSettingGranted(permission){
+        const result = (await this.runAdbShellCommand(`settings get global ${permission}`)).out;
+        if(!result || !result.includes("1")) return false;
+
+        return true;
+    }
     get adbPermissions(){
         return (async ()=>{
             const dump = await this.adbPermissionsDump;
@@ -183,10 +189,15 @@ export class App extends Control {
                 const granted = await this.getAppOppsPermissionGranted(permission);
                 result.push({permission,granted});
             }
+            const addSettingPermission = async permission => {             
+                const granted = await this.getSettingGranted(permission);
+                result.push({permission,granted});
+            }
             await addAppOpsPermission("PROJECT_MEDIA");
             await addAppOpsPermission("SYSTEM_ALERT_WINDOW");
             await addAppOpsPermission("GET_USAGE_STATS");
             await addAppOpsPermission("WRITE_SETTINGS");
+            await addSettingPermission("hidden_api_policy");
             return result;
         })();
     }
