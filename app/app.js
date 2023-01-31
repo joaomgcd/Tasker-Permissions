@@ -110,7 +110,7 @@ export class App extends Control {
         const error = result.error;
         if(error){
             if(error.includes("GRANT_RUNTIME_PERMISSIONS")){
-                alert(`It seems like you're on device that requires some special permissions for ADB to be able to grant permissions on your phone. Can you please enable the option "Disable permission Monitoring" or "USB Debugging (Security Settings)" under "Developer options" and then try again?`)
+                alert(`It seems like you're on device that requires some special permissions for ADB to be able to grant permissions on your phone. Can you please enable the option "Disable permission Monitoring" or "USB Debugging (Security Settings)" under "Developer options" and then try again? After doing that you might need to disable and re-enable USB Debugging on your device for it to work.`)
             }else{
                 alert(`Error: ${error}`);
             }
