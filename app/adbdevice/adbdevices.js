@@ -2,6 +2,8 @@ import { EventBus } from "../../js/eventbus.js";
 import { Control } from "../control.js";
 import { Models, Model } from "../model.js";
 import { UtilDOM } from "../utildom.js";
+import { ServerEventBus } from "../app.js";
+import { ResponseRunCommandLineCommand } from "../app.js";
 export class ADBDevices extends Models {
     constructor(items) {
         super(items);
@@ -26,7 +28,7 @@ export class ControlADBDevices extends Control {
      * 
      * @param {ADBDevices} adbDevices 
      */
-    constructor(adbDevices = new ADBDevices(),androidApp) {
+    constructor(adbDevices = new ADBDevices(), androidApp) {
         super();
         this.adbDevices = adbDevices;
         this.androidApp = androidApp;
@@ -38,10 +40,16 @@ export class ControlADBDevices extends Control {
             <div id="adbDevicesReload">
                 <b>Reload Devices/Permissions</b>
             </div>
-            <div id="taskerAdbWifiRoot">
-                <div>Enable ADB Wifi in Tasker with port</div>
-                <input type="text" value="5555" id="inputAdbWifiPort"></input>
-                <input type="button" value="Confirm" id="buttonEnableAdbWifi"></input>
+            <div class="extraOptions">
+                <div id="taskerAdbWifiRoot">
+                    <div>Enable ADB Wifi in Tasker with port</div>
+                    <input type="text" value="5555" id="inputAdbWifiPort"></input>
+                    <input type="button" value="Confirm" id="buttonEnableAdbWifi"></input>
+                </div>
+                <div id="taskerInstallTaskerSettingsRoot">
+                    <div>Install the latest version of Tasker Settings</div>
+                    <input type="button" value="Confirm" id="buttonInstallTaskerSettings"></input>
+                </div>
             </div>
             <div id="deviceListWrapper">
                 <h4 id="elementADBDevicesTitle">Select Your Device Below</h4>
@@ -87,9 +95,11 @@ export class ControlADBDevices extends Control {
         .adbDeviceCodeName{
             padding: 4px;
         }
-        #taskerAdbWifiRoot{
+        .extraOptions{
             margin: 16px;
             font-weight: bold;
+        }
+        #taskerAdbWifiRoot{
         }
         `;
     }
@@ -102,12 +112,13 @@ export class ControlADBDevices extends Control {
         this.elementAdbWifi = await this.$("#taskerAdbWifiRoot");
         this.elementAdbWifiPort = await this.$("#inputAdbWifiPort");
         this.elementAdbWifiButton = await this.$("#buttonEnableAdbWifi");
+        this.elementInstallTaskerSettingsButton = await this.$("#buttonInstallTaskerSettings");
 
         this.controls = await this.renderList(this.elementADBDevices, this.adbDevices, ControlADBDevice);
         this.elementADBDevicesReload.onclick = async () => {
             EventBus.post(new RequestReloadDevices());
         }
-        if(!this.adbDevices || this.adbDevices.length == 0){
+        if (!this.adbDevices || this.adbDevices.length == 0) {
             UtilDOM.show(this.elementInstructions);
             UtilDOM.hide(this.elementAdbWifi);
             this.elementADBDevicesTitle.innerHTML = "No devices detected";
@@ -121,23 +132,31 @@ export class ControlADBDevices extends Control {
                 <li><b>Reload</b>: Press the Reload button above</li>
                 <li><b>Grant Permissions</b>: Use the buttons that should now appear to grant <b>${this.androidApp.name}</b> the permissions you want!</li>
             </ol>`;
-            
-        }else{            
+
+        } else {
             UtilDOM.hide(this.elementInstructions);
-            UtilDOM.showOrHide(this.elementAdbWifi,this.androidApp.packageName == "net.dinglisch.android.taskerm");
+            UtilDOM.showOrHide(this.elementAdbWifi, this.androidApp.packageName == "net.dinglisch.android.taskerm");
             this.elementAdbWifiButton.onclick = async () => {
                 const port = this.elementAdbWifiPort.value;
                 EventBus.post(new RequestRunAdbCommand(`tcpip ${port}`));
             }
+            this.elementInstallTaskerSettingsButton.onclick = async () => {
+                this.elementInstallTaskerSettingsButton.disabled = true;
+                this.elementInstallTaskerSettingsButton.value = "Installing..."
+                const result = await ServerEventBus.postAndWaitForResponse(new RequestInstallTaskerSettings(),ResponseRunCommandLineCommand,10000);                
+                alert(result.error ?? "Installed Latest Tasker Settings!");                
+                this.elementInstallTaskerSettingsButton.value = "Confirm"
+                this.elementInstallTaskerSettingsButton.disabled = false;
+            }
         }
-        if(this.adbDevices && this.adbDevices.length == 1){
+        if (this.adbDevices && this.adbDevices.length == 1) {
             this.elementADBDevicesTitle.innerHTML = "";
         };
 
-        if(this.controls.length == 0) return;
+        if (this.controls.length == 0) return;
 
         this.controls[0].selected = true;
-        
+
     }
     async toggleShow() {
         UtilDOM.toggleShow(this.elementADBDevices)
@@ -147,10 +166,10 @@ export class ControlADBDevices extends Control {
             control.selected = false;
         });
     }
-    get selectedDeviceControl(){
-        if(!this.controls || this.controls.length == 0) return null;
+    get selectedDeviceControl() {
+        if (!this.controls || this.controls.length == 0) return null;
 
-        return this.controls.find(control=>control.selected);
+        return this.controls.find(control => control.selected);
     }
 }
 export class ControlADBDevice extends Control {
@@ -183,21 +202,26 @@ export class ControlADBDevice extends Control {
             await EventBus.post(new SelectedDevice());
         }
     }
-    get selected(){
-        return UtilDOM.hasClass(this.elementADBDevice,"selected");
+    get selected() {
+        return UtilDOM.hasClass(this.elementADBDevice, "selected");
     }
-    set selected(value){
-        UtilDOM.addOrRemoveClass(this.elementADBDevice,value,"selected");
+    set selected(value) {
+        UtilDOM.addOrRemoveClass(this.elementADBDevice, value, "selected");
     }
 }
-class RequestReloadDevices {}
-class SelectedDevice {}
+class RequestReloadDevices { }
+class SelectedDevice { }
 
 class UnSelectDevices {
 }
 
 class RequestRunAdbCommand {
-    constructor(command){
+    constructor(command) {
         this.command = command;
+    }
+}
+
+class RequestInstallTaskerSettings {
+    constructor() {
     }
 }

@@ -242,7 +242,7 @@ class RequestRunCommandLineCommand{
         Object.assign(this,args);
     }
 }
-class ResponseRunCommandLineCommand{}
+export class ResponseRunCommandLineCommand{}
 
 class RequestToggleDevOptions{}
 export class ServerEventBus{

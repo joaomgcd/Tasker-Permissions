@@ -30,3 +30,4 @@ dist/squirrel-windows/RELEASES
 **.nupkg
 *.bak
 *.zip
+server/TaskerSettings.apk
